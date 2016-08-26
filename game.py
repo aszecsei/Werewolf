@@ -132,12 +132,19 @@ class Game(object):
     
     def HaveVillagersWon(self):
         return len(self.AliveWerewolves()) == 0
+    
+    def Accuse(self, fromPlayer, aboutPlayer, role):
+        for mPlayer in self.players:
+            mPlayer.Accusation(fromPlayer, aboutPlayer, role)
 
 class AI(object):
     def __init__(self, playerID, role):
         self.playerID = playerID
         self.role = role
         self.isAlive = True
+        
+    def Accusation(self, fromPlayer, aboutPlayer, role):
+        pass
     
     def Doctor(self):
         # select a random living person to save, unless we're dead
@@ -174,9 +181,10 @@ class AI(object):
             return random.choice(mGame.AlivePlayersExcept(self.playerID))
     
 if __name__ == "__main__":
-    mGamesToPlay = 10000
+    mGamesToPlay = 1
     mVictories = {"Villager" : 0, "Werewolf" : 0}
     for i in range(0, mGamesToPlay):
         mGame = Game(12)
+        mGame.Debug = True
         mVictories[mGame.Play()] += 1
     print(str(mVictories))

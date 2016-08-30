@@ -170,7 +170,7 @@ class Game(object):
         if(self.Debug):
             print("Player #" + str(fromPlayer) + " says that Player #" + str(aboutPlayer) + " is a " + role.name)
         for mPlayer in self.players:
-            if mPlayer.isAlive:
+            if mPlayer.isAlive and not mPlayer.playerID == fromPlayer:
                 mPlayer.Accusation(fromPlayer, aboutPlayer, role)
 
 class AI(object):
@@ -192,6 +192,11 @@ class AI(object):
         # If someone says we're a werewolf, protest!
         if aboutPlayer == self.playerID:
             if role == Role.Werewolf:
+                if mGame.Debug:
+                    print("Player #" + str(self.playerID) + " will remember this.")                
+                if self.role == Role.Werewolf:
+                    # remember them and KILL
+                    self.plannedMurder = fromPlayer
                 mGame.Accuse(self.playerID, self.playerID, Role.Villager)
                 if random.randint(1, 5) == 1:
                     # We might accuse them of being a werewolf in return!
@@ -202,6 +207,8 @@ class AI(object):
         # Assume villagers are telling the truth
         if self.mThoughts[fromPlayer] == Role.Villager:
             self.mThoughts[aboutPlayer] = role
+            if mGame.Debug:
+                print("Player #" + str(self.playerID) + " believed Player #" + str(fromPlayer) + "'s statement that Player #" + str(aboutPlayer) + " is a " + role.name + "!")            
         else:
             # Assuming there's not a direct contradiction, there's a 20% chance of belief
             if self.mThoughts[aboutPlayer] == Role.Unknown:
@@ -235,7 +242,10 @@ class AI(object):
         if not self.isAlive:
             return -1
         else:
-            return random.choice(mGame.AliveNonWerewolves())
+            choices = mGame.AliveNonWerewolves()
+            if not self.plannedMurder == -1 and self.plannedMurder in choices:
+                return self.plannedMurder
+            return random.choice(choices)
 
     def Seer(self):
         # discover players we don't know

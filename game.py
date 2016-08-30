@@ -170,7 +170,8 @@ class Game(object):
         if(self.Debug):
             print("Player #" + str(fromPlayer) + " says that Player #" + str(aboutPlayer) + " is a " + role.name)
         for mPlayer in self.players:
-            mPlayer.Accusation(fromPlayer, aboutPlayer, role)
+            if mPlayer.isAlive:
+                mPlayer.Accusation(fromPlayer, aboutPlayer, role)
 
 class AI(object):
     def __init__(self, playerID, role, numPlayers):
@@ -184,11 +185,30 @@ class AI(object):
         for mID in range(0, numPlayers):
             self.mThoughts[mID] = Role.Unknown
 
-        self.mThoughts[self.playerID] = role
+        # Even if we're a werewolf, we pretend to be a villager
+        self.mThoughts[self.playerID] = Role.Villager
 
     def Accusation(self, fromPlayer, aboutPlayer, role):
-        # Assume everyone is telling the truth
-        self.mThoughts[aboutPlayer] = role
+        # If someone says we're a werewolf, protest!
+        if aboutPlayer == self.playerID:
+            if role == Role.Werewolf:
+                mGame.Accuse(self.playerID, self.playerID, Role.Villager)
+                if random.randint(1, 5) == 1:
+                    # We might accuse them of being a werewolf in return!
+                    self.mThoughts[fromPlayer] = Role.Werewolf
+                    mGame.Accuse(self.playerID, fromPlayer, Role.Werewolf)
+                return
+        
+        # Assume villagers are telling the truth
+        if self.mThoughts[fromPlayer] == Role.Villager:
+            self.mThoughts[aboutPlayer] = role
+        else:
+            # Assuming there's not a direct contradiction, there's a 20% chance of belief
+            if self.mThoughts[aboutPlayer] == Role.Unknown:
+                if random.randint(1, 5) == 1:
+                    if mGame.Debug:
+                        print("Player #" + str(self.playerID) + " believed Player #" + str(fromPlayer) + "'s statement that Player #" + str(aboutPlayer) + " is a " + role.name + "!")
+                    self.mThoughts[aboutPlayer] = role
 
     def DeclareSaved(self):
         if self.role == Role.Doctor:
@@ -252,7 +272,10 @@ class AI(object):
                 for mPID in mGame.AlivePlayersExcept(self.playerID):
                     if self.mThoughts[mPID] == Role.Unknown:
                         mSuspects.append(mPID)
-            return random.choice(mSuspects)
+            if len(mSuspects) > 0:
+                return random.choice(mSuspects)
+            else:
+                return random.choice(mGame.AlivePlayersExcept(self.playerID))
 
     def VotingResults(self, results):
         random.shuffle(results)

@@ -278,17 +278,24 @@ class AI(object):
                 return random.choice(mGame.AlivePlayersExcept(self.playerID))
 
     def VotingResults(self, results):
-        random.shuffle(results)
-        self.plannedMurder = results.index(max(results))
+        myResults = []
+        mMax = 0
+        for i in range(0, len(results)):
+            if results[i] > mMax:
+                myResults = [i]
+            elif results[i] == mMax:
+                myResults.append(i)
+                
+        self.plannedMurder = random.choice(myResults)
 
     def VotingDone(self, lynchedID):
         self.plannedMurder = -1
 
 if __name__ == "__main__":
-    mGamesToPlay = 1000
+    mGamesToPlay = 1
     mVictories = {"Villager" : 0, "Werewolf" : 0}
     for i in range(0, mGamesToPlay):
         mGame = Game(12)
-        # mGame.Debug = True
+        mGame.Debug = True
         mVictories[mGame.Play()] += 1
     print(str(mVictories))
